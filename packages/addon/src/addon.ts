@@ -465,29 +465,29 @@ export class AIOStreams {
     logger.info(`Sorted results in ${getTimeTakenSincePoint(sortStartTime)}`);
 
     // apply config.maxResultsPerResolution
-    if (this.config.maxResultsPerResolution) {
-      const startTime = new Date().getTime();
-      const resolutionCounts = new Map();
+if (this.config.maxResultsPerResolution) {
+  const startTime = new Date().getTime();
 
-      const limitedResults = filteredResults.filter((result) => {
-        const resolution = result.resolution || 'Unknown';
-        const currentCount = resolutionCounts.get(resolution) || 0;
+  const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
-        if (currentCount < this.config.maxResultsPerResolution!) {
-          resolutionCounts.set(resolution, currentCount + 1);
-          return true;
-        }
+  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution) : [];
 
-        return false;
-      });
-      skipReasons.streamLimiters =
-        filteredResults.length - limitedResults.length;
-      filteredResults = limitedResults;
+  const maxResults = this.config.maxResultsPerResolution;
+  limitedResults = limitedResults.slice(0, maxResults);
 
-      logger.info(
-        `Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
-      );
-    }
+  filteredResults = limitedResults;
+
+
+
+
+
+
+
+  
+  console.log(
+    `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
+  );
+}
 
     const totalSkipped = Object.values(skipReasons).reduce(
       (acc, val) => acc + val,
