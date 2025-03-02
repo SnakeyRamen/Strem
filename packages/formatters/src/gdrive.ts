@@ -29,7 +29,7 @@ export function gdriveFormat(
 
   name += `${stream.addon.name} ${stream.personal ? '(Your Media) ' : ''}`;
   if (!minimalistic) {
-    name += stream.resolution;
+    name += stream.resolution === '2160p' ? '4K' : stream.resolution;
   } else {
     name += stream.resolution !== 'Unknown' ? stream.resolution + '' : '';
   }
