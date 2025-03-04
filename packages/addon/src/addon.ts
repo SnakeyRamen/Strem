@@ -470,7 +470,7 @@ if (this.config.maxResultsPerResolution) {
   
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
-  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent?.seeders !== undefined && result.torrent.seeders > 1) : [];
+  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent?.seeders !== undefined && result.torrent.seeders > 1 && (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))) : [];
 
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
