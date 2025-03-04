@@ -297,7 +297,7 @@ export class AIOStreams {
         skipReasons.sizeFilters++;
         return false;
       }
-      if (parsedStream.torrent?.seeders <= 1) { return false; }
+
       if (
         streamRequest.type === 'series' &&
         this.config.maxEpisodeSize &&
@@ -467,7 +467,7 @@ export class AIOStreams {
     // apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
-
+  filteredResults = filteredResults.filter(result => result.torrent?.seeders > 1);
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
   let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution) : [];
