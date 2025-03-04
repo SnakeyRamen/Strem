@@ -467,10 +467,10 @@ export class AIOStreams {
     // apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
-  filteredResults = filteredResults.filter(result => result.torrent?.seeders !== undefined && result.torrent.seeders > 1);
+  
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
-  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution) : [];
+  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent && result.torrent.seeders > 1) : [];
 
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
