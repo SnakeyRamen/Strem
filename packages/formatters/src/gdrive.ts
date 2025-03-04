@@ -69,8 +69,8 @@ export function gdriveFormat(
         : '';
 
     description += stream.usenet?.age ? `📅 ${stream.usenet.age} ` : '';
-    description +=
-      stream.indexers && !minimalistic ? `🔍 ${stream.indexers}` : '';
+
+
     description += '\n';
   }
 
@@ -85,10 +85,10 @@ export function gdriveFormat(
     description += '\n';
   }
 
-  if (!minimalistic && stream.filename) {
-    description += stream.filename ? `📄 ${stream.filename}` : '📄 Unknown';
-    description += '\n';
-  }
+
+
+
+  
   if (stream.message) {
     description += `📢 ${stream.message}`;
   }
