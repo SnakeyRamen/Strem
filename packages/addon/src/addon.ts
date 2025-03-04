@@ -297,7 +297,7 @@ export class AIOStreams {
         skipReasons.sizeFilters++;
         return false;
       }
-
+      if (parsedStream.seeders <= 1) { return false; }
       if (
         streamRequest.type === 'series' &&
         this.config.maxEpisodeSize &&
