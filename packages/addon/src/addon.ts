@@ -470,7 +470,7 @@ if (this.config.maxResultsPerResolution) {
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
   let limitedResults = [];
 
-  if (addon.id === 'torrentio') {
+  if (addon && addon.id === 'torrentio') {
     limitedResults = highestResolution
       ? filteredResults.filter(result =>
           result.resolution === highestResolution &&
@@ -488,12 +488,12 @@ if (this.config.maxResultsPerResolution) {
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
   filteredResults = limitedResults;
-}
 
   console.log(
     `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
   );
 }
+
 
     const totalSkipped = Object.values(skipReasons).reduce(
       (acc, val) => acc + val,
