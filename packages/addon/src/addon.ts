@@ -467,23 +467,24 @@ export class AIOStreams {
     // apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
-  
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
-
-  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && (result.torrent?.seeders === undefined || result.torrent.seeders > 1) && (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))) : [];
-
+  let limitedResults = [];
+  if (addonId.startsWith('torrentio')) {
+    limitedResults = highestResolution ? filteredResults.filter(result =>
+      result.resolution === highestResolution &&
+      (result.torrent?.seeders === undefined || result.torrent.seeders > 1) &&
+      (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))
+    ) : [];
+  } else {
+    limitedResults = filteredResults.filter(result => {
+      const match = result.name.match(/(\d+)%/);
+      return match ? parseInt(match[1], 10) >= 80 : false;
+    });
+  }
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
-
   filteredResults = limitedResults;
-
-
-
-
-
-
-
-  
+}
   console.log(
     `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
   );
