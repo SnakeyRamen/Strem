@@ -479,11 +479,7 @@ if (this.config.maxResultsPerResolution) {
         )
       : [];
   } else {
-    limitedResults = filteredResults.filter(result => {
-      const streamDescription = result.description || result.filename || "";
-      const match = streamDescription.match(/(\d+)%/);
-      return match ? parseInt(match[1], 10) >= 80 : false;
-    });
+    limitedResults = filteredResults;
   }
 
   const maxResults = this.config.maxResultsPerResolution;
