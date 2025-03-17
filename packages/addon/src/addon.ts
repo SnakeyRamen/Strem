@@ -467,30 +467,27 @@ export class AIOStreams {
     // apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
+  
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
-  let limitedResults = [];
 
-  if (filteredResults.length > 0 && filteredResults[0].addon?.id === 'torrentio') {
-    limitedResults = highestResolution
-      ? filteredResults.filter(result =>
-          result.resolution === highestResolution &&
-          (result.torrent?.seeders === undefined || result.torrent.seeders > 1) &&
-          (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))
-        )
-      : [];
-  } else {
-    limitedResults = filteredResults;
-  }
+  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent?.seeders !== undefined && result.torrent.seeders > 1 && (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))) : [];
 
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
+
   filteredResults = limitedResults;
 
+
+
+
+
+
+
+  
   console.log(
     `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
   );
 }
-
 
     const totalSkipped = Object.values(skipReasons).reduce(
       (acc, val) => acc + val,
@@ -965,44 +962,44 @@ if (this.config.maxResultsPerResolution) {
             .trim()
         : error;
 
-const torrentioAddon = this.config.addons.find(a => a.id === 'torrentio');
-if (torrentioAddon) {
-  const addonId = `${torrentioAddon.id}-${JSON.stringify(torrentioAddon.options)}`;
-  const addonName = torrentioAddon.options.name || torrentioAddon.options.overrideName || addonDetails.find(a => a.id === torrentioAddon.id)?.name || torrentioAddon.id;
-  try {
-    const startTime = new Date().getTime();
-    const { addonStreams, addonErrors } = await this.getStreamsFromAddon(torrentioAddon, addonId, streamRequest);
-    parsedStreams.push(...addonStreams);
-    errorStreams.push(...Array.from(new Set(addonErrors)).map((error: string) => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
-    logger.info(`Got ${addonStreams.length} streams ${addonErrors.length ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`);
-    if (addonStreams.length > 0) return { parsedStreams, errorStreams };
-  } catch (error: any) {
-    logger.error(`Failed to get streams from ${addonName}: ${error}`);
-    errorStreams.push({ error: formatError(error.message ?? error ?? 'Unknown error'), addon: { id: addonId, name: addonName } });
-  }
-}
+    const addonPromises = this.config.addons.map(async (addon) => {
+      const addonName =
+        addon.options.name ||
+        addon.options.overrideName ||
+        addonDetails.find((addonDetail) => addonDetail.id === addon.id)?.name ||
+        addon.id;
+      const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
+      try {
+        const startTime = new Date().getTime();
+        const { addonStreams, addonErrors } = await this.getStreamsFromAddon(
+          addon,
+          addonId,
+          streamRequest
+        );
+        parsedStreams.push(...addonStreams);
+        errorStreams.push(
+          ...[...new Set(addonErrors)].map((error) => ({
+            error: formatError(error),
+            addon: { id: addonId, name: addonName },
+          }))
+        );
+        logger.info(
+          `Got ${addonStreams.length} streams ${addonErrors.length > 0 ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`
+        );
+      } catch (error: any) {
+        logger.error(`Failed to get streams from ${addonName}: ${error}`);
+        errorStreams.push({
+          error: formatError(error.message ?? error ?? 'Unknown error'),
+          addon: {
+            id: addonId,
+            name: addonName,
+          },
+        });
+      }
+    });
 
-const addonPromises = this.config.addons.filter(a => a.id !== 'torrentio').map(async (addon) => {
-  const addonName = addon.options.name || addon.options.overrideName || addonDetails.find(a => a.id === addon.id)?.name || addon.id;
-  const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
-  try {
-    const startTime = new Date().getTime();
-    const { addonStreams, addonErrors } = await this.getStreamsFromAddon(addon, addonId, streamRequest);
-    parsedStreams.push(...addonStreams);
-    errorStreams.push(...Array.from(new Set(addonErrors)).map((error: string) => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
-    logger.info(`Got ${addonStreams.length} streams ${addonErrors.length ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`);
-  } catch (error: any) {
-    logger.error(`Failed to get streams from ${addonName}: ${error}`);
-    errorStreams.push({ error: formatError(error.message ?? error ?? 'Unknown error'), addon: { id: addonId, name: addonName } });
-  }
-});
-
-await Promise.all(addonPromises);
-return { parsedStreams, errorStreams };
-
-
-
-    
+    await Promise.all(addonPromises);
+    return { parsedStreams, errorStreams };
   }
 
   private async getStreamsFromAddon(
