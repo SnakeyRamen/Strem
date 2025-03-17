@@ -470,7 +470,7 @@ if (this.config.maxResultsPerResolution) {
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
   let limitedResults = [];
 
-  if (addon && addon.id === 'torrentio') {
+  if (filteredResults.length > 0 && filteredResults[0].addon?.id === 'torrentio') {
     limitedResults = highestResolution
       ? filteredResults.filter(result =>
           result.resolution === highestResolution &&
@@ -480,7 +480,8 @@ if (this.config.maxResultsPerResolution) {
       : [];
   } else {
     limitedResults = filteredResults.filter(result => {
-      const match = result.name.match(/(\d+)%/);
+      const streamDescription = result.description || result.filename || "";
+      const match = streamDescription.match(/(\d+)%/);
       return match ? parseInt(match[1], 10) >= 80 : false;
     });
   }
