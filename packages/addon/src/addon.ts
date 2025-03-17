@@ -970,7 +970,7 @@ if (torrentioAddon) {
     const startTime = new Date().getTime();
     const { addonStreams, addonErrors } = await this.getStreamsFromAddon(torrentioAddon, addonId, streamRequest);
     parsedStreams.push(...addonStreams);
-    errorStreams.push(...new Set(addonErrors).map(error => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
+    errorStreams.push(...Array.from(new Set(addonErrors)).map((error: string) => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
     logger.info(`Got ${addonStreams.length} streams ${addonErrors.length ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`);
     if (addonStreams.length > 0) return { parsedStreams, errorStreams };
   } catch (error: any) {
@@ -986,7 +986,7 @@ const addonPromises = this.config.addons.filter(a => a.id !== 'torrentio').map(a
     const startTime = new Date().getTime();
     const { addonStreams, addonErrors } = await this.getStreamsFromAddon(addon, addonId, streamRequest);
     parsedStreams.push(...addonStreams);
-    errorStreams.push(...new Set(addonErrors).map(error => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
+    errorStreams.push(...Array.from(new Set(addonErrors)).map((error: string) => ({ error: formatError(error), addon: { id: addonId, name: addonName } })));
     logger.info(`Got ${addonStreams.length} streams ${addonErrors.length ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`);
   } catch (error: any) {
     logger.error(`Failed to get streams from ${addonName}: ${error}`);
