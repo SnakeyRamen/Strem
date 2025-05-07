@@ -1085,34 +1085,30 @@ if (this.config.maxResultsPerResolution) {
   }
   
 private async retryAddonFetch(
-  fn: () => Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }>,
+  fetchFn: () => Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }>,
   addonName: string,
   maxRetries: number = 3,
   delayMs: number = 1000
 ): Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const result = await fn();
+    const { addonStreams, addonErrors } = await fetchFn();
 
-    const has429Error = result.addonErrors.some(
-      (error) => typeof error === 'string' && error.includes('429')
+    const hasRetryableError = addonErrors.some((error) =>
+      error.includes('429') || error.toLowerCase().includes('too many requests')
     );
 
-    if (!has429Error) {
-      return result;
+    if (!hasRetryableError || attempt === maxRetries) {
+      return { addonStreams, addonErrors };
     }
 
     logger.warn(
-      `Received 429 error from ${addonName}, retrying (${attempt}/${maxRetries})...`
+      `Retryable error (e.g. 429) from ${addonName}. Retrying ${attempt}/${maxRetries}...`
     );
 
-    if (attempt < maxRetries) {
-      await new Promise((res) => setTimeout(res, delayMs));
-    } else {
-      return result; // return after final attempt
-    }
+    await new Promise((res) => setTimeout(res, delayMs));
   }
 
-  throw new Error(`Failed to get streams from ${addonName} after ${maxRetries} retries`);
+  return await fetchFn(); // final attempt fallback
 }
 
   private async getParsedStreams(
