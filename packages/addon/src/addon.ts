@@ -1098,7 +1098,7 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
     const addonStreams: ParsedStream[] = [];
     const addonErrors: string[] = [];
 
-    for (let attempt = 1; attempt <= 10; attempt++) {
+    for (let attempt = 1; attempt <= 20; attempt++) {
       try {
         const result = await this.getStreamsFromAddon(
           addon,
@@ -1123,7 +1123,7 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
         const delay = Math.floor(Math.random() * 901) + 100;
         await new Promise((res) => setTimeout(res, delay));
       } catch (error: any) {
-        if (attempt === 10) {
+        if (attempt === 20) {
           logger.error(`Failed to get streams from ${addonName}: ${error}`);
           addonErrors.push(error.message ?? String(error));
         } else {
