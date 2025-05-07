@@ -109,7 +109,7 @@ export class AIOStreams {
     }
 
     const { parsedStreams, errorStreams } =
-      await this.Streams(streamRequest);
+      await this.getParsedStreams(streamRequest);
 
     const skipReasons = {
       excludeLanguages: 0,
@@ -1083,31 +1083,6 @@ if (this.config.maxResultsPerResolution) {
     }
     return 0;
   }
-  
-private async retryAddonFetch(
-  fetchFn: () => Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }>,
-  addonName: string,
-  maxRetries: number = 3,
-  delayMs: number = 1000
-): Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const { addonStreams, addonErrors } = await fetchFn();
-
-    const hasErrors = addonErrors.length > 0;
-
-    if (!hasErrors || attempt === maxRetries) {
-      return { addonStreams, addonErrors };
-    }
-
-    logger.warn(
-      `Error(s) received from ${addonName}, retrying (${attempt}/${maxRetries})...`
-    );
-
-    await new Promise((res) => setTimeout(res, delayMs));
-  }
-
-  return await fetchFn();
-}
 
   private async getParsedStreams(
     streamRequest: StreamRequest
@@ -1133,10 +1108,11 @@ private async retryAddonFetch(
       const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
       try {
         const startTime = new Date().getTime();
-        const { addonStreams, addonErrors } = await this.retryAddonFetch(
-  () => this.getStreamsFromAddon(addon, addonId, streamRequest),
-  addonName
-);
+        const { addonStreams, addonErrors } = await this.getStreamsFromAddon(
+          addon,
+          addonId,
+          streamRequest
+        );
         parsedStreams.push(...addonStreams);
         errorStreams.push(
           ...[...new Set(addonErrors)].map((error) => ({
