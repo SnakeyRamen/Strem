@@ -1,6 +1,6 @@
 import { ParsedStream } from '@aiostreams/types';
 import { formatDuration, formatSize, languageToEmoji } from './utils';
-import { serviceDetails, Settings } from '@aiostreams/utils';
+import { serviceDetails } from '@aiostreams/utils';
 
 export function gdriveFormat(
   stream: ParsedStream,
@@ -20,33 +20,25 @@ export function gdriveFormat(
     const serviceShortName =
       serviceDetails.find((service) => service.id === stream.provider!.id)
         ?.shortName || stream.provider.id;
-    name += `[${serviceShortName}${cacheStatus}] `;
+    name += `[${serviceShortName}${cacheStatus}]\n`;
   }
 
   if (stream.torrent?.infoHash) {
-    name += `[P2P] `;
+    name += `[P2P]\n`;
   }
 
   name += `${stream.addon.name} ${stream.personal ? '(Your Media) ' : ''}`;
   if (!minimalistic) {
-    name += stream.resolution;
+    name += stream.resolution === '2160p' ? '4K' : stream.resolution;
   } else {
     name += stream.resolution !== 'Unknown' ? stream.resolution + '' : '';
   }
 
   // let description: string = `${stream.quality !== 'Unknown' ? '🎥 ' + stream.quality + ' ' : ''}${stream.encode !== 'Unknown' ? '🎞️ ' + stream.encode : ''}`;
   let description: string = '';
-  if (
-    stream.quality ||
-    stream.encode ||
-    (stream.releaseGroup && !minimalistic)
-  ) {
+  if (stream.quality || stream.encode) {
     description += stream.quality !== 'Unknown' ? `🎥 ${stream.quality} ` : '';
     description += stream.encode !== 'Unknown' ? `🎞️ ${stream.encode} ` : '';
-    description +=
-      stream.releaseGroup !== 'Unknown' && !minimalistic
-        ? `🏷️ ${stream.releaseGroup}`
-        : '';
     description += '\n';
   }
 
@@ -77,8 +69,8 @@ export function gdriveFormat(
         : '';
 
     description += stream.usenet?.age ? `📅 ${stream.usenet.age} ` : '';
-    description +=
-      stream.indexers && !minimalistic ? `🔍 ${stream.indexers}` : '';
+
+
     description += '\n';
   }
 
@@ -89,25 +81,17 @@ export function gdriveFormat(
         (language) => languageToEmoji(language) || language
       );
     }
-    description += `🌎 ${languages.join(minimalistic ? ' / ' : ' | ')}`;
+    description += `🔊 ${languages.join(' | ')}`;
     description += '\n';
   }
 
-  if (!minimalistic && (stream.filename || stream.folderName)) {
-    description += stream.folderName ? `📁 ${stream.folderName}\n` : '';
-    description += stream.filename ? `📄 ${stream.filename}\n` : '📄 Unknown\n';
-  }
 
+
+
+  
   if (stream.message) {
     description += `📢 ${stream.message}`;
   }
-
-  if (stream.proxied) {
-    name = `🕵️‍♂️ ${name}`;
-  } else if (Settings.SHOW_DIE) {
-    name = `🎲 ${name}`;
-  }
-
   description = description.trim();
   name = name.trim();
   return { name, description };
