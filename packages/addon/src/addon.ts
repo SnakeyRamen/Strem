@@ -1084,60 +1084,59 @@ if (this.config.maxResultsPerResolution) {
     return 0;
   }
 
-  private async getParsedStreams(
-    streamRequest: StreamRequest
-  ): Promise<{ parsedStreams: ParsedStream[]; errorStreams: ErrorStream[] }> {
-    const parsedStreams: ParsedStream[] = [];
-    const errorStreams: ErrorStream[] = [];
-    const formatError = (error: string) =>
-      typeof error === 'string'
-        ? error
-            .replace(/- |: /g, '\n')
-            .split('\n')
-            .map((line: string) => line.trim())
-            .join('\n')
-            .trim()
-        : error;
+public async getParsedStreams(streamRequest: StreamRequest): Promise<{
+  parsedStreams: ParsedStream[];
+  errorStreams: ErrorStream[];
+}> {
+  const parsedStreams: ParsedStream[] = [];
+  const errorStreams: ErrorStream[] = [];
 
-    const addonPromises = this.config.addons.map(async (addon) => {
-      const addonName =
-        addon.options.name ||
-        addon.options.overrideName ||
-        addonDetails.find((addonDetail) => addonDetail.id === addon.id)?.name ||
-        addon.id;
-      const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
+  for (const addon of this.addons) {
+    const addonId = addon.addonId;
+    const addonName = addon.addonName;
+
+    const addonStreams: ParsedStream[] = [];
+    const addonErrors: string[] = [];
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const startTime = new Date().getTime();
-        const { addonStreams, addonErrors } = await this.getStreamsFromAddon(
-          addon,
-          addonId,
-          streamRequest
-        );
-        parsedStreams.push(...addonStreams);
-        errorStreams.push(
-          ...[...new Set(addonErrors)].map((error) => ({
-            error: formatError(error),
-            addon: { id: addonId, name: addonName },
-          }))
-        );
-        logger.info(
-          `Got ${addonStreams.length} streams ${addonErrors.length > 0 ? `and ${addonErrors.length} errors ` : ''}from addon ${addonName} in ${getTimeTakenSincePoint(startTime)}`
-        );
-      } catch (error: any) {
-        logger.error(`Failed to get streams from ${addonName}: ${error}`);
-        errorStreams.push({
-          error: formatError(error.message ?? error ?? 'Unknown error'),
-          addon: {
-            id: addonId,
-            name: addonName,
-          },
-        });
-      }
-    });
+        const result = await this.getStreamsFromAddon(addon, addonId, streamRequest);
 
-    await Promise.all(addonPromises);
-    return { parsedStreams, errorStreams };
+        addonStreams.push(...result.addonStreams);
+        addonErrors.push(...result.addonErrors);
+
+        if (result.addonErrors.length === 0 || result.addonStreams.length > 0) {
+          break;
+        }
+
+        logger.warn(`Attempt ${attempt} failed for ${addonName}, retrying...`);
+
+        await new Promise((res) => setTimeout(res, 1000));
+      } catch (error: any) {
+        if (attempt === 3) {
+          logger.error(`Failed to get streams from ${addonName}: ${error}`);
+          errorStreams.push({
+            error: error.message ?? String(error),
+            addon: { id: addonId, name: addonName },
+          });
+        } else {
+          logger.warn(`Error fetching from ${addonName}, retrying (${attempt}/3)...`);
+          await new Promise((res) => setTimeout(res, 1000));
+        }
+      }
+    }
+
+    parsedStreams.push(...addonStreams);
+    addonErrors.forEach((error) => {
+      errorStreams.push({
+        error,
+        addon: { id: addonId, name: addonName },
+      });
+    });
   }
+
+  return { parsedStreams, errorStreams };
+}
 
   private async getStreamsFromAddon(
     addon: Config['addons'][0],
