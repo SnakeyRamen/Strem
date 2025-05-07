@@ -109,7 +109,7 @@ export class AIOStreams {
     }
 
     const { parsedStreams, errorStreams } =
-      await this.getParsedStreams(streamRequest);
+      await this.Streams(streamRequest);
 
     const skipReasons = {
       excludeLanguages: 0,
@@ -1083,6 +1083,37 @@ if (this.config.maxResultsPerResolution) {
     }
     return 0;
   }
+  
+private async retryAddonFetch(
+  fn: () => Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }>,
+  addonName: string,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<{ addonStreams: ParsedStream[]; addonErrors: string[] }> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const result = await fn();
+
+    const has429Error = result.addonErrors.some(
+      (error) => typeof error === 'string' && error.includes('429')
+    );
+
+    if (!has429Error) {
+      return result;
+    }
+
+    logger.warn(
+      `Received 429 error from ${addonName}, retrying (${attempt}/${maxRetries})...`
+    );
+
+    if (attempt < maxRetries) {
+      await new Promise((res) => setTimeout(res, delayMs));
+    } else {
+      return result; // return after final attempt
+    }
+  }
+
+  throw new Error(`Failed to get streams from ${addonName} after ${maxRetries} retries`);
+}
 
   private async getParsedStreams(
     streamRequest: StreamRequest
@@ -1108,11 +1139,10 @@ if (this.config.maxResultsPerResolution) {
       const addonId = `${addon.id}-${JSON.stringify(addon.options)}`;
       try {
         const startTime = new Date().getTime();
-        const { addonStreams, addonErrors } = await this.getStreamsFromAddon(
-          addon,
-          addonId,
-          streamRequest
-        );
+        const { addonStreams, addonErrors } = await this.retryAddonFetch(
+  () => this.getStreamsFromAddon(addon, addonId, streamRequest),
+  addonName
+);
         parsedStreams.push(...addonStreams);
         errorStreams.push(
           ...[...new Set(addonErrors)].map((error) => ({
