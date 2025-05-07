@@ -1100,26 +1100,34 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const result = await this.getStreamsFromAddon(addon, addonId, streamRequest);
+        const result = await this.getStreamsFromAddon(
+          addon,
+          addonId,
+          streamRequest
+        );
 
         addonStreams.push(...result.addonStreams);
         addonErrors.push(...result.addonErrors);
 
-        if (result.addonErrors.length === 0 || result.addonStreams.length > 0) {
+        if (
+          result.addonErrors.length === 0 ||
+          result.addonStreams.length > 0
+        ) {
           break;
         }
 
-        logger.warn(`Attempt ${attempt} failed for ${addonName}, retrying...`);
+        logger.warn(
+          `Attempt ${attempt} returned no streams for ${addonName}, retrying...`
+        );
         await new Promise((res) => setTimeout(res, 1000));
       } catch (error: any) {
         if (attempt === 3) {
           logger.error(`Failed to get streams from ${addonName}: ${error}`);
-          errorStreams.push({
-            error: error.message ?? String(error),
-            addon: { id: addonId, name: addonName },
-          });
+          addonErrors.push(error.message ?? String(error));
         } else {
-          logger.warn(`Error fetching from ${addonName}, retrying (${attempt}/3)...`);
+          logger.warn(
+            `Error fetching from ${addonName}, retrying (${attempt}/3)...`
+          );
           await new Promise((res) => setTimeout(res, 1000));
         }
       }
