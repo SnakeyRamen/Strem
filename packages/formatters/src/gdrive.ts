@@ -34,8 +34,25 @@ export function gdriveFormat(
     name += stream.resolution !== 'Unknown' ? stream.resolution + '' : '';
   }
 
-  // let description: string = `${stream.quality !== 'Unknown' ? '🎥 ' + stream.quality + ' ' : ''}${stream.encode !== 'Unknown' ? '🎞️ ' + stream.encode : ''}`;
   let description: string = '';
+
+  const title = `${stream.filename ?? ''} ${stream.folderName ?? ''}`;
+
+  const cutTypes = [
+    { name: 'Theatrical Cut', regex: /\bTheatrical\b/i },
+    { name: 'Special Edition', regex: /\b(extended|uncut|directors|special|unrated|uncensored|cut|version|edition)(\b|\d)/i },
+    { name: 'IMAX Enhanced', regex: /\b(IMAX[ ._-]Enhanced)\b/i },
+    { name: 'IMAX', regex: /\b((?<!NON[ ._-])IMAX)\b/i },
+    { name: 'Open Matte', regex: /\b(Open[ ._-]?Matte)\b/i },
+  ];
+
+  for (const cut of cutTypes) {
+    if (cut.regex.test(title)) {
+      description += `❗ ${cut.name}\n`;
+      break;
+    }
+  }
+
   if (stream.quality || stream.encode) {
     description += stream.quality !== 'Unknown' ? `🎥 ${stream.quality} ` : '';
     description += stream.encode !== 'Unknown' ? `🎞️ ${stream.encode} ` : '';
@@ -51,6 +68,7 @@ export function gdriveFormat(
       stream.audioTags.length > 0 ? `🎧 ${stream.audioTags.join(' | ')}` : '';
     description += '\n';
   }
+
   if (
     stream.size ||
     (stream.torrent?.seeders && !minimalistic) ||
@@ -67,10 +85,7 @@ export function gdriveFormat(
       (minimalistic && stream.torrent?.seeders && !stream.provider?.cached)
         ? `👥 ${stream.torrent.seeders} `
         : '';
-
     description += stream.usenet?.age ? `📅 ${stream.usenet.age} ` : '';
-
-
     description += '\n';
   }
 
@@ -85,13 +100,10 @@ export function gdriveFormat(
     description += '\n';
   }
 
-
-
-
-  
   if (stream.message) {
     description += `📢 ${stream.message}`;
   }
+
   description = description.trim();
   name = name.trim();
   return { name, description };
