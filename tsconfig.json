@@ -1,6 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
-  "noImplicitAny": false
   "references": [
     {
       "path": "./packages/addon"
