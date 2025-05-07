@@ -1093,22 +1093,20 @@ private async retryAddonFetch(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const { addonStreams, addonErrors } = await fetchFn();
 
-    const hasRetryableError = addonErrors.some((error) =>
-      error.includes('429') || error.toLowerCase().includes('too many requests')
-    );
+    const hasErrors = addonErrors.length > 0;
 
-    if (!hasRetryableError || attempt === maxRetries) {
+    if (!hasErrors || attempt === maxRetries) {
       return { addonStreams, addonErrors };
     }
 
     logger.warn(
-      `Retryable error (e.g. 429) from ${addonName}. Retrying ${attempt}/${maxRetries}...`
+      `Error(s) received from ${addonName}, retrying (${attempt}/${maxRetries})...`
     );
 
     await new Promise((res) => setTimeout(res, delayMs));
   }
 
-  return await fetchFn(); // final attempt fallback
+  return await fetchFn();
 }
 
   private async getParsedStreams(
