@@ -1093,7 +1093,7 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
 
   for (const addon of this.config.addons) {
     const addonId = addon.id;
-    const addonName = addon.name || addon.id;
+    const addonName = addon.id;
 
     const addonStreams: ParsedStream[] = [];
     const addonErrors: string[] = [];
