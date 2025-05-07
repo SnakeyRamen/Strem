@@ -1091,9 +1091,9 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
   const parsedStreams: ParsedStream[] = [];
   const errorStreams: ErrorStream[] = [];
 
-  for (const addon of this.addons) {
-    const addonId = addon.addonId;
-    const addonName = addon.addonName;
+  for (const addon of this.config.addons) {
+    const addonId = addon.id;
+    const addonName = addon.name || addon.id;
 
     const addonStreams: ParsedStream[] = [];
     const addonErrors: string[] = [];
@@ -1110,7 +1110,6 @@ public async getParsedStreams(streamRequest: StreamRequest): Promise<{
         }
 
         logger.warn(`Attempt ${attempt} failed for ${addonName}, retrying...`);
-
         await new Promise((res) => setTimeout(res, 1000));
       } catch (error: any) {
         if (attempt === 3) {
