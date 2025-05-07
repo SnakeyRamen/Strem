@@ -565,25 +565,59 @@ export class AIOStreams {
     // apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
-  
+
   const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
-  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent?.seeders !== undefined && result.torrent.seeders > 1 && (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))) : [];
+  let limitedResults = highestResolution
+    ? filteredResults.filter(
+        result =>
+          result.resolution === highestResolution &&
+          result.torrent?.seeders !== undefined &&
+          result.torrent.seeders > 1 &&
+          (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))
+      )
+    : [];
 
   const maxResults = this.config.maxResultsPerResolution;
   limitedResults = limitedResults.slice(0, maxResults);
 
+  const topSeeders = limitedResults[0]?.torrent?.seeders || 0;
+  const minSeedersRequired = Math.floor(topSeeders / 10);
+
+  const cutTypes = [
+    { name: "Theatrical Cut", regex: /\bTheatrical\b/i },
+    { name: "Special Edition", regex: /\b(extended|uncut|directors|special|unrated|uncensored|cut|version|edition)(\b|\d)/i },
+    { name: "IMAX", regex: /\b((?<!NON[ ._-])IMAX)\b/i },
+    { name: "IMAX Enhanced", regex: /\b(IMAX[ ._-]Enhanced)\b/i },
+    { name: "Open Matte", regex: /\b(Open[ ._-]?Matte)\b/i },
+  ];
+
+  const alreadyIncluded = new Set<string>();
+
+  for (const cut of cutTypes) {
+    const match = filteredResults.find(
+      result => {
+        if (alreadyIncluded.has(cut.name)) return false;
+        const title = `${result.filename ?? ''} ${result.folderName ?? ''}`;
+        return (
+          cut.regex.test(title) &&
+          result.torrent?.seeders !== undefined &&
+          result.torrent.seeders >= minSeedersRequired &&
+          !limitedResults.includes(result)
+        );
+      }
+    );
+
+    if (match) {
+      limitedResults.push(match);
+      alreadyIncluded.add(cut.name);
+    }
+  }
+
   filteredResults = limitedResults;
 
-
-
-
-
-
-
-  
   console.log(
-    `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
+    `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution (+ cuts) in ${new Date().getTime() - startTime}ms`
   );
 }
 
