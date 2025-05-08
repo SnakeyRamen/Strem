@@ -40,7 +40,7 @@ export function gdriveFormat(
 
   const cutTypes = [
     { name: 'Theatrical Cut', regex: /\bTheatrical\b/i },
-    { name: 'Special Edition', regex: /\b(extended|uncut|directors|special|unrated|uncensored|cut|version|edition)(\b|\d)/i },
+    { name: 'Directors Cut', regex: /\b(extended|uncut|directors|special|unrated|uncensored|cut|version|edition)(\b|\d)/i },
     { name: 'IMAX Enhanced', regex: /\b(IMAX[ ._-]Enhanced)\b/i },
     { name: 'IMAX', regex: /\b((?<!NON[ ._-])IMAX)\b/i },
     { name: 'Open Matte', regex: /\b(Open[ ._-]?Matte)\b/i },
