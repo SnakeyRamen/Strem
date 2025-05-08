@@ -582,7 +582,7 @@ if (this.config.maxResultsPerResolution) {
   limitedResults = limitedResults.slice(0, maxResults);
 
   const topSeeders = limitedResults[0]?.torrent?.seeders || 0;
-  const minSeedersRequired = Math.floor(topSeeders / 10);
+  const minSeedersRequired = Math.floor(topSeeders / 15);
 
   const cutTypes = [
     { name: 'Theatrical Cut', regex: /\bTheatrical\b/i },
