@@ -562,28 +562,23 @@ export class AIOStreams {
 
     logger.info(`Sorted results in ${getTimeTakenSincePoint(sortStartTime)}`);
 
-    // apply config.maxResultsPerResolution
+// apply config.maxResultsPerResolution
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
-  
-  const highestResolution = filteredResults.length > 0 ? filteredResults[0].resolution : null;
 
-  let limitedResults = highestResolution ? filteredResults.filter(result => result.resolution === highestResolution && result.torrent?.seeders !== undefined && result.torrent.seeders > 1 && (!result.languages || result.languages.length === 0 || result.languages.includes("English") || result.languages.includes("Multi"))) : [];
+  // Filter only streams with "EN -" or "ENG -" in the stream name
+  let limitedResults = filteredResults.filter(result => {
+    const title = `${result.filename ?? ''} ${result.folderName ?? ''}`.toUpperCase();
+    return title.includes("EN -") || title.includes("ENG -");
+  });
 
-  const maxResults = this.config.maxResultsPerResolution;
-  limitedResults = limitedResults.slice(0, maxResults);
+  // Slice down to maxResultsPerResolution
+  limitedResults = limitedResults.slice(0, this.config.maxResultsPerResolution);
 
   filteredResults = limitedResults;
 
-
-
-
-
-
-
-  
   console.log(
-    `|INF| addon > getStreams: Limited results to ${limitedResults.length} streams after applying maxResultsPerResolution in ${new Date().getTime() - startTime}ms`
+    `|INF| addon > getStreams: Limited results to ${filteredResults.length} streams (EN/ENG name filter) in ${new Date().getTime() - startTime}ms`
   );
 }
 
