@@ -566,10 +566,10 @@ export class AIOStreams {
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
 
-  // Filter only streams with "EN -" or "ENG -" in the stream name
+  // Filter only streams where the name starts with [EN or [ENG
   let limitedResults = filteredResults.filter(result => {
-    const title = `${result.filename ?? ''} ${result.folderName ?? ''}`.toUpperCase();
-    return title.includes("EN -") || title.includes("ENG -");
+    const name = result.filename ?? result.folderName ?? "";
+    return /^\s*\[(EN|ENG)\b/i.test(name);
   });
 
   // Slice down to maxResultsPerResolution
@@ -578,7 +578,7 @@ if (this.config.maxResultsPerResolution) {
   filteredResults = limitedResults;
 
   console.log(
-    `|INF| addon > getStreams: Limited results to ${filteredResults.length} streams (EN/ENG name filter) in ${new Date().getTime() - startTime}ms`
+    `|INF| addon > getStreams: Limited results to ${filteredResults.length} EN/ENG streams in ${new Date().getTime() - startTime}ms`
   );
 }
 
