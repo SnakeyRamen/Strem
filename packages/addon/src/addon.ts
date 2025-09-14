@@ -566,10 +566,12 @@ export class AIOStreams {
 if (this.config.maxResultsPerResolution) {
   const startTime = new Date().getTime();
 
-  // Filter only streams where the name starts with [EN or [ENG
+  // Keep only streams marked as English, same as gdrive minimal would do
   let limitedResults = filteredResults.filter(result => {
-    const name = result.filename ?? result.folderName ?? "";
-    return /^\s*\[(EN|ENG)\b/i.test(name);
+    if (!result.languages || result.languages.length === 0) return false;
+    return result.languages.some(lang =>
+      ["en", "eng", "english"].includes(lang.toLowerCase())
+    );
   });
 
   // Slice down to maxResultsPerResolution
@@ -578,7 +580,7 @@ if (this.config.maxResultsPerResolution) {
   filteredResults = limitedResults;
 
   console.log(
-    `|INF| addon > getStreams: Limited results to ${filteredResults.length} EN/ENG streams in ${new Date().getTime() - startTime}ms`
+    `|INF| addon > getStreams: Limited results to ${filteredResults.length} English-language streams in ${new Date().getTime() - startTime}ms`
   );
 }
 
